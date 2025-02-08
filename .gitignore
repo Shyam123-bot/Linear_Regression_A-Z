@@ -1,0 +1,38 @@
+# Ignore virtual environments
+venv/
+linregAZ/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore compiled files
+*.so
+*.pyd
+*.dll
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+*.swp
+
+# Ignore environment variables and secrets
+.env
+*.secret
+
+# Ignore extracted data
+extracted_data/
+
+# Ignore zip files
+*.zip
