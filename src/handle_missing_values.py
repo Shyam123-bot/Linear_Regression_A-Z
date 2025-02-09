@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-
+import numpy as np
 import pandas as pd
 
 # Setup logging configuration
@@ -50,7 +50,8 @@ class DropMissingValuesStrategy(MissingValueHandlingStrategy):
         df_cleaned = df.dropna(axis=self.axis, thresh=self.thresh)
         logging.info("Missing values dropped.")
         return df_cleaned
-    
+
+
 # Concrete Strategy for Dropping Specific Columns
 class DropSpecificColumnsStrategy(MissingValueHandlingStrategy):
     def __init__(self, columns):
@@ -126,6 +127,60 @@ class FillMissingValuesStrategy(MissingValueHandlingStrategy):
         return df_cleaned
 
 
+# Concrete Strategy for Filling Missing Values with Median for Specific Columns
+class FillMissingValuesWithMedianStrategy(MissingValueHandlingStrategy):
+    def handle(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Fills missing values in Power, Engine, Mileage, and Seats with their median values.
+        Fills missing values in Price with the median price per brand and model.
+        Drops rows where Price is still missing after filling.
+
+        Parameters:
+        df (pd.DataFrame): The input DataFrame containing missing values.
+
+        Returns:
+        pd.DataFrame: The DataFrame with missing values handled.
+        """
+        logging.info("Filling missing values with median for specific columns.")
+
+        # Fill missing values in Power, Engine, Mileage, and Seats with their median values
+        numeric_columns = df.select_dtypes(include=np.number).columns.tolist()
+        numeric_columns.remove('Price')  # Exclude the dependent variable
+        medianFiller = lambda x: x.fillna(x.median())
+        df[numeric_columns] = df[numeric_columns].apply(medianFiller, axis=0)
+
+        # Fill missing values in Price with median price per brand and model
+        Brand_name = df['Car_Brand'].unique()
+        Model = df['Model'].unique()
+
+        Median1 = []  # Median Price per Brand
+        for brand in Brand_name:
+            median_price = df['Price'][df['Car_Brand'] == brand].median()
+            Median1.append(median_price)
+
+        Median2 = []  # Median Price per Model
+        for model in Model:
+            median_price = df['Price'][df['Model'] == model].median()
+            Median2.append(median_price)
+
+        # Replace missing values in Price with 0.0
+        df['Price'] = df['Price'].fillna(0.0)
+
+        # Replace 0.0 with median price per brand
+        for i in range(len(df)):  # Loop through each row
+            if df.loc[i, 'Price'] == 0.00:
+                for j in range(len(Brand_name)):
+                    if df.loc[i, 'Car_Brand'] == Brand_name[j]:  # Match the brand
+                        df.loc[i, 'Price'] = Median1[j]  # Replace with median price of the brand
+
+        # Drop rows where Price is still missing (NaN)
+        logging.info("Dropping rows where Price is still missing after filling.")
+        df.dropna(subset=['Price'], axis=0, inplace=True)
+
+        logging.info("Missing values filled for Power, Engine, Mileage, Seats, and Price.")
+        return df
+
+
 # Context Class for Handling Missing Values
 class MissingValueHandler:
     def __init__(self, strategy: MissingValueHandlingStrategy):
@@ -171,13 +226,18 @@ if __name__ == "__main__":
     df = drop_columns_handler.handle_missing_values(df)
 
     # Step 2: Drop 'New_Price' based on missing values (since it has too many NaNs)
-    drop_missing_handler = MissingValueHandler(DropMissingValuesStrategy(axis=1, thresh=len(df) * 0.5))  
+    drop_missing_handler = MissingValueHandler(DropMissingValuesStrategy(axis=1, thresh=len(df) * 0.5))
     df = drop_missing_handler.handle_missing_values(df)  # Drops columns with >50% missing values
 
     # Save the cleaned dataset
     df.to_csv("../extracted_data/cleaned_used_cars_data.csv", index=False)
-    
-    # Switch to filling missing values with mean
-    # missing_value_handler.set_strategy(FillMissingValuesStrategy(method='mean'))
-    # df_filled = missing_value_handler.handle_missing_values(df)
 
+    # Example dataframe
+    processed_df = pd.read_csv(r"D:\Github\Linear_Regression_A-Z\extracted_data\after_data_types_fixing.csv")
+
+    # Step 3: Fill missing values in Power, Engine, Mileage, Seats, and Price
+    fill_missing_handler = MissingValueHandler(FillMissingValuesWithMedianStrategy())
+    final_df= fill_missing_handler.handle_missing_values(processed_df)
+
+    # Save the cleaned dataset
+    df.to_csv("../extracted_data/filled_data.csv", index=False)
