@@ -31,8 +31,5 @@ __pycache__/
 .env
 *.secret
 
-# Ignore extracted data
-extracted_data/
-
 # Ignore zip files
 *.zip
