@@ -61,6 +61,17 @@ class CarRegionAndTypeEngineering(FeatureEngineeringStrategy):
 
         logging.info("Car region mapping and tier categorization completed.")
         return df
+    
+class YearToCarAgeTransformation(FeatureEngineeringStrategy):
+    def apply_transformation(self, df: pd.DataFrame) -> pd.DataFrame:
+        logging.info("Converting 'Year' to 'Car_Age'.")
+        
+        current_year = datetime.now().year
+        df["Car_Age"] = current_year - df["Year"]
+        
+        df.drop(columns=["Year"], inplace=True)
+        logging.info("Year conversion completed. 'Year' replaced with 'Car_Age'.")
+        return df
 
 
 # Concrete Strategy for Log Transformation
@@ -243,21 +254,25 @@ if __name__ == "__main__":
     car_region_engineer = FeatureEngineer(CarRegionAndTypeEngineering())
     df_transformed = car_region_engineer.apply_feature_engineering(df)
 
+    # Apply Year to Car_Age transformation
+    year_transformer = FeatureEngineer(YearToCarAgeTransformation())
+    df = year_transformer.apply_feature_engineering(df)
+
     # Log Transformation Example
-    # log_transformer = FeatureEngineer(LogTransformation(features=['SalePrice', 'Gr Liv Area']))
-    # df_log_transformed = log_transformer.apply_feature_engineering(df)
+    log_transformer = FeatureEngineer(LogTransformation(features=['Kilometers_Driven', 'Engine', 'Power']]))
+    df_log_transformed = log_transformer.apply_feature_engineering(df)
 
     # Standard Scaling Example
-    # standard_scaler = FeatureEngineer(StandardScaling(features=['SalePrice', 'Gr Liv Area']))
-    # df_standard_scaled = standard_scaler.apply_feature_engineering(df)
+    standard_scaler = FeatureEngineer(StandardScaling(features=['Seats', 'Kilometers_Driven']))
+    df_standard_scaled = standard_scaler.apply_feature_engineering(df)
 
     # Min-Max Scaling Example
-    # minmax_scaler = FeatureEngineer(MinMaxScaling(features=['SalePrice', 'Gr Liv Area'], feature_range=(0, 1)))
-    # df_minmax_scaled = minmax_scaler.apply_feature_engineering(df)
+    minmax_scaler = FeatureEngineer(MinMaxScaling(features=['Year', 'Mileage','Engine','Power'], feature_range=(0, 1)))
+    df_minmax_scaled = minmax_scaler.apply_feature_engineering(df)
 
     # One-Hot Encoding Example
-    # onehot_encoder = FeatureEngineer(OneHotEncoding(features=['Neighborhood']))
-    # df_onehot_encoded = onehot_encoder.apply_feature_engineering(df)
+    onehot_encoder = FeatureEngineer(OneHotEncoding(features=['Transmission','Owner_Type','Region','Car_Type']))
+    df_onehot_encoded = onehot_encoder.apply_feature_engineering(df)
 
     # Save transformed data
     df_transformed.to_csv("D:/Github/Linear_Regression_A-Z/extracted_data/Adding_regions.csv", index=False)
