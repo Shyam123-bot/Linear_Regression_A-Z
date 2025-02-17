@@ -101,17 +101,14 @@ class ModelBuilder:
         return self._strategy.build_and_train_model(X_train, y_train)
 
 
-# Example usage
 if __name__ == "__main__":
-    # Example DataFrame (replace with actual data loading)
-    df = pd.read_csv('your_data.csv')
-    X_train = df.drop(columns=['target_column'])
-    y_train = df['target_column']
+    X_train = pd.read_csv("D:\Github\Linear_Regression_A-Z\extracted_data\X_train.csv")
+    y_train = pd.read_csv("D:\Github\Linear_Regression_A-Z\extracted_data\y_train.csv").squeeze("columns")
     model_builder = ModelBuilder(LinearRegressionStrategy())
     trained_model = model_builder.build_model(X_train, y_train)
     print(trained_model.named_steps['model'].coef_)  # Print model coefficients
     
     # Save the trained model inside "models" folder
-    joblib.dump(trained_model, 'models/linear_regression_model.pkl')
+    joblib.dump(trained_model, 'D:\Github\Linear_Regression_A-Z\model\linear_regression_model.pkl')
 
-    print("Model saved successfully in models/linear_regression_model.pkl")
+    print("Model saved successfully")
